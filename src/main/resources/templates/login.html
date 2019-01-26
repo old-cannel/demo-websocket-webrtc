@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>登录</title>
+    <script src="/js/angular.min.js" ></script>
+    <script src="/js/sockjs.min.js" ></script>
+    <script src="/js/stomp.min.js" ></script>
+    <script type="text/javascript">
+
+    </script>
+</head>
+<body ng-app="app" ng-controller="MainController">
+<h1>欢迎登录</h1>
+<form action="/loginjwt" method="post">
+    <p>username: <input type="text" name="username" /></p>
+    <p>password: <input type="text" name="password" value="123456" /></p>
+    <input type="submit" value="Submit" />
+</form>
+</body>
+</html>
