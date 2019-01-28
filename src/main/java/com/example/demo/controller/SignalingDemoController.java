@@ -15,7 +15,7 @@ import org.springframework.web.socket.WebSocketSession;
  * @Description: 信令服务
  */
 @Controller
-public class SignalingController {
+public class SignalingDemoController {
 
     /**
      * 通过房间号建立每个浏览器与服务器的数据通道
