@@ -38,4 +38,20 @@ public class SignalingController {
     public String getSessionId(StompHeaderAccessor stompHeaderAccessor){
         return stompHeaderAccessor.getSessionId();
     }
+
+    /**
+     *
+     * 开始创建p2p
+     *
+     * @param room
+     * @return
+     */
+    @MessageMapping("/rtc/{room}")
+    @SendTo("/topic/rtc/{room}")
+    public SignalingMessage rtc(@DestinationVariable("room") String room) {
+        SignalingMessage signalingMessage=new SignalingMessage();
+        signalingMessage.setMessage("创建p2p");
+        return signalingMessage;
+    }
+
 }

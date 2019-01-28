@@ -17,6 +17,8 @@ public class SignalingMessage implements Serializable {
     private String message;
 //    信令通道密钥
     private String room;
+//sdp消息
+    private SdpMessage sdpMessage;
 
 
 }
