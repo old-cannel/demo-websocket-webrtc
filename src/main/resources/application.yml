@@ -16,19 +16,20 @@ spring:
     username: root
     password: root
   redis:
-    # 连接工厂使用的数据库索引
     database: 0
-    # Redis服务器主机。
     host: 10.110.1.254
-    # 登录redis服务器的密码
     password:
-    #Redis服务端口
     port: 6379
-    #启用SSL支持
     ssl: false
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
-
+server:
+  ssl:
+    enabled: true
+    key-store: keystore.p12
+    key-store-password: 123456
+    key-store-type: PKCS12
+    key-alias: tomcat

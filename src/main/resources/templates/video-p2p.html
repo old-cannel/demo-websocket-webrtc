@@ -262,6 +262,7 @@
             });
             $("#ok").click(function () {
                 offer();
+                $("#yourVideo").attr("muted",true);
             });
             $("#hangup").click(function () {
                 hangup();
@@ -297,8 +298,10 @@
     </div>
     <hr/>
     <div id="container" style="width: 640px;margin: 0;padding: 0;">
-        <video id="myVideo" playsinline autoplay muted></video>
-        <video id="yourVideo" playsinline autoplay muted></video>
+        <video id="myVideo" autoplay="autoplay" controls
+               muted="false"></video>
+        <video id="yourVideo" autoplay="autoplay" controls
+               ></video>
     </div>
 </div>
 
