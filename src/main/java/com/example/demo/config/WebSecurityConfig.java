@@ -95,6 +95,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/my-websocket/**").permitAll()
                 .antMatchers("/app/**").permitAll()
                 .antMatchers("/**").permitAll()
+
                 //其他任何请求都要权限验证
                 .anyRequest().authenticated()
         ;

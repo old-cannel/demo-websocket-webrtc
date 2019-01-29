@@ -42,11 +42,15 @@
                 stompClient.subscribe('/topic/connect/' + room, function (message) {
 
                     if (sessionId != JSON.parse(message.body).sessionId) {
-                        //打印收到不是自己的消息
-                        console.info(message);
-                        var msg = message.body;
-                        pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(msg).sdpMessage));
-                        answer();
+                        debugger;
+                        var sdgMsg=JSON.parse(message.body).sdpMessage;
+                        // if(sdgMsg.type!='answer'){
+                            //打印收到不是自己的消息
+                            console.info(message);
+                            pc.setRemoteDescription(new RTCSessionDescription(sdgMsg));
+                            answer();
+                        // }
+
                     }
 
                 });
@@ -76,6 +80,7 @@
         function setConnected(connected) {
             $("#connect").prop("disabled", connected);
             $("#disconnect").prop("disabled", !connected);
+            createPC();
         }
 
         function disconnect() {
@@ -164,19 +169,23 @@
 
 
         function offer() {
-            pc.createOffer(initRtcDescription, doNothing, constraints);
+            pc.createOffer(function (localDesc) {
+                debugger;
+                pc.setLocalDescription(localDesc);
+                sendMsg({'sdpMessage': localDesc});
+            }, doNothing, constraints);
         }
 
         // and this generates it for an answer.
         function answer() {
-            pc.createAnswer(initRtcDescription, doNothing, constraints);
+            pc.createAnswer(function (localDesc) {
+                debugger;
+                pc.setLocalDescription(localDesc);
+
+                sendMsg({'sdpMessage': localDesc});
+            }, doNothing, constraints);
         }
 
-        function initRtcDescription(localDesc) {
-            pc.setLocalDescription(localDesc);
-
-            sendMsg({'sdpMessage': localDesc});
-        }
 
         //视频聊天代码
         var
@@ -287,7 +296,7 @@
                     <button id="connect" class="btn btn-default" type="submit">connect</button>
                     <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">disconnect
                     </button>
-                    <button id="rtcConnect" class="btn btn-default" type="submit">创建视频聊天链接</button>
+                    <!--<button id="rtcConnect" class="btn btn-default" type="submit">创建视频聊天链接</button>-->
                     <button id="call" class="btn btn-default" type="submit">呼叫</button>
                     <button id="ok" class="btn btn-default" type="submit">应答</button>
                     <button id="hangup" class="btn btn-default" type="submit">关闭</button>

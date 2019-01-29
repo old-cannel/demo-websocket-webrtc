@@ -93,9 +93,9 @@ async function init() {
     createPeerConnectionButton.disabled = false;
 
     if (localStream) {
-      localVideo.srcObject = null;
-      localStream.getTracks().forEach(track => track.stop());
-    }
+          localVideo.srcObject = null;
+          localStream.getTracks().forEach(track => track.stop());
+      }
     const audioSource = audioSelect.value;
     console.log(`Selected audio source: ${audioSource}`);
     const videoSource = videoSelect.value;

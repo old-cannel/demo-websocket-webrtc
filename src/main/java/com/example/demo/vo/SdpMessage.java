@@ -11,9 +11,13 @@ import java.io.Serializable;
  */
 @Data
 public class SdpMessage implements Serializable {
-    //类型
+    //类型 0标识请求视频链接
     private String type;
     //sdp
     private String sdp;
+
+    private String candidate;
+    private String sdpMid;
+    private String sdpMLineIndex;
 
 }
