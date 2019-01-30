@@ -28,8 +28,7 @@ constraints = {
         OfferToReceiveAudio: true,
         OfferToReceiveVideo: true
     }
-},
-    sendAnswer=true;
+}
 ;
 
 /**
@@ -40,8 +39,8 @@ $(function () {
      remoteVideo = document.getElementById("remoteVideo");
 
     //好友、用户信息、订阅自己的消息通道
-    // $.get(myFriendsUrl, myFriendsCallBack);
-    // $.get(myNameUrl, myNameCallBack);
+    $.get(myFriendsUrl, myFriendsCallBack);
+    $.get(myNameUrl, myNameCallBack);
 });
 /**
  * 本地视频加载
@@ -75,7 +74,8 @@ function gotStream(stream){
  * 用户呼叫
  * 创建peerConnection
  */
-function call() {
+function call(obj) {
+    toUserName = $(obj).prev().text();
     callHide();
     buttonShow($("#hangupButton"));
 
@@ -144,9 +144,9 @@ function receiveOffer(offerDescption) {
  */
 function receiveAnswer(answerDescption) {
     peerConnection.setRemoteDescription(answerDescption);
-    //不知道为什么非要加这个视频才能展示，感觉是为了再次确认下
-    if(sendAnswer){
-        sendAnswer=false;
+    peerConnection.setRemoteDescription(answerDescption);
+    //没有完成链接就重新发起链接
+    if(peerConnection.iceConnectionState!='connected'){
         offer();
     }
 }
@@ -296,7 +296,7 @@ function dealSdp(sdpMsg) {
  */
 function myFriendsCallBack(data) {
     $.each(data.result, function (i, val) {
-        $("#myFriends").append('<li><span>' + val + '</span> <button type="button" class="btn btn-info" onclick="call()" style="margin: 5px 0px;">呼叫</button></li>');
+        $("#myFriends").append('<li><span>' + val + '</span> <button type="button" class="btn btn-info" onclick="call(this)" style="margin: 5px 0px;">呼叫</button></li>');
     });
 
 }
@@ -327,7 +327,7 @@ function subscribeSelf() {
                 let result = body.result;
                 if (result.sdpMsg) {
                     //这个里面处理视频聊天
-                    // toUserName = result.fromUserName;
+                    toUserName = result.fromUserName;
                     dealSdp(result.sdpMessage);
                 } else {
                     //    这个里面是普通的聊天
