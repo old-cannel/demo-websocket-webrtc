@@ -20,8 +20,13 @@
 <script src="/js/adapter.js" type="text/javascript"></script>
 
 <!--define chat js-->
-<script src="/js/chat/client.js" type="text/javascript"></script>
+<!--<script src="/js/chat/client.js" type="text/javascript"></script>-->
+<script src="/js/chat/liveClient.js" type="text/javascript"></script>
 <body>
+
+
+
+
 <div class="container-fluid">
     <div class="row" style="margin-bottom: 20px;">
         <div style="width:100%;text-align: center;font-size: 24px;font-weight: 600;">在线聊天</div>
@@ -31,6 +36,7 @@
         <div class="col-md-2 text-center" style="border: solid 1px #ccc;margin-right: 20px">
             <H5>好友列表</H5>
             <ul style="text-align: left" id="myFriends">
+                <li><span>111</span> <button type="button" class="btn btn-info" onclick="call()" style="margin: 5px 0px;">呼叫</button></li>
             </ul>
         </div>
         <div class="col-md-6 text-center" style="border: solid 1px #ccc;">
@@ -38,10 +44,10 @@
             <hr />
             <div class="row">
                 <div class="col-md-6">
-                    <video id="myVideo" autoplay muted controls style="width: 100%;height: 100%"></video>
+                    <video id="localVideo" autoplay muted controls style="width: 100%;height: 100%"></video>
                 </div>
                 <div class="col-md-6">
-                    <video id="yourVideo" autoplay controls style="width: 100%;height: 100%"></video>
+                    <video id="remoteVideo" autoplay controls style="width: 100%;height: 100%"></video>
                 </div>
             </div>
             <div class="row">
@@ -49,9 +55,9 @@
                 </div>
                 <div class="col-md-6">
                     <br />
-                    <button id="permit" type="button" class="btn btn-success" style="display: none" onclick="permit()">同意</button>
-                    <button id="deny" type="button" class="btn btn-danger" style="display: none" onclick="deny()">拒绝</button>
-                    <button id="hangup" type="button" class="btn btn-danger" style="display: none" onclick="hangup()">挂机</button>
+                    <button id="permitButton" type="button" class="btn btn-success" style="display: none" onclick="permit()">同意</button>
+                    <button id="denyButton" type="button" class="btn btn-danger" style="display: none" onclick="deny()">拒绝</button>
+                    <button id="hangupButton" type="button" class="btn btn-danger" style="display: none" onclick="hangup()">挂机</button>
                 </div>
             </div>
             <br />
