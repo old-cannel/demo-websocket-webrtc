@@ -19,9 +19,17 @@ let
     //发送用户名（系统唯一）
     toUserName = null;
 
+
 //webrtc 变量
-let localVideo,localStream,localPeerConnection,
-    remoteVideo,remoteStream,remotePeerConnection
+let localVideo,localStream,peerConnection,
+    remoteVideo,remoteStream,
+constraints = {
+    mandatory: {
+        OfferToReceiveAudio: true,
+        OfferToReceiveVideo: true
+    }
+},
+    sendAnswer=true;
 ;
 
 /**
@@ -47,7 +55,6 @@ window.onload=function () {
  * 本地视频读取并渲染
  */
 function start() {
-    trace("Requesting local stream");
     getUserMedia({audio:true, video:true}, gotStream,
         function(error) {
             trace("getUserMedia error: ", error);
@@ -58,7 +65,6 @@ function start() {
  * @param stream
  */
 function gotStream(stream){
-    trace("Received local stream");
     localStream = stream;
     attachMediaStream(localVideo, localStream);
 
@@ -70,11 +76,8 @@ function gotStream(stream){
  * 创建peerConnection
  */
 function call() {
-    trace("Starting call");
     callHide();
-    // buttonShow($("#hangupButton"));
-    buttonShow("#denyButton");
-    buttonShow("#permitButton");
+    buttonShow($("#hangupButton"));
 
     if (localStream.getVideoTracks().length > 0) {
         trace('Using video device: ' + localStream.getVideoTracks()[0].label);
@@ -83,114 +86,208 @@ function call() {
         trace('Using audio device: ' + localStream.getAudioTracks()[0].label);
     }
     //ice服务器配置
-    var servers = null;
 
-    localPeerConnection = new RTCPeerConnection(servers);
-    trace("Created local peer connection object localPeerConnection");
+    peerConnection = new RTCPeerConnection({iceServers: configIce()});
+    peerConnection.addStream(localStream);
     //呼叫方ice发送
-    localPeerConnection.onicecandidate = gotLocalIceCandidate;
+    peerConnection.onicecandidate = gotIceCandidate;
+    peerConnection.onaddstream = gotRemoteStream;
 
+    applySdp(toUserName,'call');
 }
-
-
+/**
+ * 收到呼叫请求
+ */
+function receiveCall() {
+    buttonShow("#denyButton");
+    buttonShow("#permitButton");
+}
+/**
+ * 同意
+ */
 function permit() {
     buttonHide("#denyButton");
     buttonHide("#permitButton");
     buttonShow($("#hangupButton"));
 
-    var servers = null;
-    remotePeerConnection = new RTCPeerConnection(servers);
-    trace("Created remote peer connection object remotePeerConnection");
-    remotePeerConnection.onicecandidate = gotRemoteIceCandidate;
-    remotePeerConnection.onaddstream = gotRemoteStream;
+    peerConnection = new RTCPeerConnection({iceServers: configIce()});
+    peerConnection.addStream(localStream);
+    peerConnection.onicecandidate = gotIceCandidate;
+    peerConnection.onaddstream = gotRemoteStream;
+    offer();
 
-    localPeerConnection.addStream(localStream);
-    trace("Added localStream to localPeerConnection");
-    localPeerConnection.createOffer(gotLocalDescription,handleError);
-    
 }
-function gotLocalDescription(description){
-    localPeerConnection.setLocalDescription(description);
-    trace("Offer from localPeerConnection: \n" + description.sdp);
-    remotePeerConnection.setRemoteDescription(description);
-    remotePeerConnection.createAnswer(gotRemoteDescription,handleError);
+/**
+ * 同意并发送offer
+ */
+function offer() {
+    peerConnection.createOffer(gotDescription,handleError,constraints);
+}
+/**
+ * 发送sdp
+ * @param description
+ */
+function gotDescription(description){
+    peerConnection.setLocalDescription(description);
+    //给对方发送 sdp
+    sendSdpMsg(toUserName,description);
+}
+ /* 收到offer sdp
+ */
+function receiveOffer(offerDescption) {
+    peerConnection.setRemoteDescription(offerDescption);
+    peerConnection.createAnswer(gotDescription,handleError,constraints);
 }
 
-function gotRemoteDescription(description){
-    remotePeerConnection.setLocalDescription(description);
-    trace("Answer from remotePeerConnection: \n" + description.sdp);
-    localPeerConnection.setRemoteDescription(description);
+/**
+ * 收到answer sdp
+ */
+function receiveAnswer(answerDescption) {
+    peerConnection.setRemoteDescription(answerDescption);
+    //不知道为什么非要加这个视频才能展示，感觉是为了再次确认下
+    if(sendAnswer){
+        sendAnswer=false;
+        offer();
+    }
 }
+
+
+
+
+
+
+
+
 
 /**
  * 拒绝
  */
-function deny() {
+function deny(isSend) {
+    if(peerConnection!=null){
+        peerConnection.close();
+        peerConnection = null;
+    }
 
-    localPeerConnection.close();
-    localPeerConnection = null;
+
     buttonHide("#hangupButton");
     buttonHide("#denyButton");
     buttonHide("#permitButton");
     callShow();
-    trace("Denying call");
+// 通知对方拒绝通话
+    if(isSend){
+        applySdp(toUserName,'deny');
+    }
 
-//    todo 通知对方
 }
 
+function hangup() {
+
+}
 /**
  * 挂机
  */
-function hangup() {
-    trace("Ending call");
-    localPeerConnection.close();
-    remotePeerConnection.close();
-    localPeerConnection = null;
-    remotePeerConnection = null;
+function hangup(isSend) {
+    //    通知对方挂断
+    if(isSend){
+        applySdp(toUserName,'hangup');
+    }
+
+    if(peerConnection!=null){
+        peerConnection.close();
+        peerConnection = null;
+    }
+
     buttonHide($("#hangupButton"));
     callShow();
-//    todo 通知对方
+
 
 }
 
+/**
+ * 接收远端的视频流并渲染到remoteVoide
+ * @param event
+ */
 function gotRemoteStream(event){
     remoteStream = event.stream;
     attachMediaStream(remoteVideo, remoteStream);
-    trace("Received remote stream");
 }
-
-/**
- * 发送Ice
- * @param event
- */
-function gotLocalIceCandidate(event){
+function gotIceCandidate(event){
     if (event.candidate) {
-        setIceCandidate(event.candidate,remotePeerConnection);
+        sendSdpMsg(toUserName,event.candidate);
     }
 }
 
-
-/**
- * 被呼叫方ice打洞
- * @param event
- */
-function gotRemoteIceCandidate(event){
-    if (event.candidate) {
-        setIceCandidate(event.candidate,localPeerConnection);
-    }
-}
 /**
  * 接收ice
  * @param event
  */
 function setIceCandidate(candidate,peerConnection) {
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-    trace("ICE candidate: \n" + candidate.candidate);
+    if(peerConnection!=null&&peerConnection!='undefine'){
+        peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        trace("ICE candidate: \n" + candidate.candidate);
+    }
+    trace("peerConnect is undefine or null");
+
+}
+function configIce() {
+    var stunuri = true,
+        turnuri = false,
+        config = new Array();
+
+    if (stunuri) {
+        // this is one of Google's public STUN servers
+        config.push({
+            "url": "stun:stun.l.google.com:19302",
+            "urls": "stun:stun.l.google.com:19302"
+        });
+    }
+    if (turnuri) {
+        if (stunuri) {
+            config.push({
+                "url": "turn:user@turn.webrtcbook.com",
+                "urls": "turn:turn.webrtcbook.com",
+                "username": "user",
+                "credential": "test"
+            });
+        } else {
+            config.push({
+                "url": "turn:user@turn-only.webrtcbook.com",
+                "urls": "turn:turn-only.webrtcbook.com",
+                "username": "user",
+                "credential": "test"
+            });
+        }
+    }
+    trace("config = " + JSON.stringify(config));
+    return config;
 }
 
 
 function handleError(){}
 /**webrtc 操作 end**/
+
+/**
+ * 处理sdpMsg消息
+ */
+function dealSdp(sdpMsg) {
+    if (sdpMsg.type == 'call') {
+        receiveCall();
+    } /*else if (sdpMsg.type == 'permit') {
+        receivePermit();
+    }*/ else if (sdpMsg.type == 'offer') {
+        receiveOffer(sdpMsg);
+    } else if (sdpMsg.type == 'answer') {
+        receiveAnswer(sdpMsg);
+    }else if (sdpMsg.type == 'deny') {
+        deny();
+    }
+    else if (sdpMsg.type == 'hangup') {
+        hangup();
+    } else if (sdpMsg.type == 'candidate') {
+        setIceCandidate(sdpMsg,remotePeerConnection);
+    }
+
+}
 /**stomp 操作 start**/
 
 /**
@@ -230,7 +327,7 @@ function subscribeSelf() {
                 let result = body.result;
                 if (result.sdpMsg) {
                     //这个里面处理视频聊天
-                    toUserName = result.fromUserName;
+                    // toUserName = result.fromUserName;
                     dealSdp(result.sdpMessage);
                 } else {
                     //    这个里面是普通的聊天
@@ -267,24 +364,13 @@ function sendSdpMsg(username, sdpMsg) {
 /**
  * 申请聊天
  * @param username
- * @param type offer请求，answer同意，deny拒绝,hangup挂机
+ * @param type offer请求，answer同意，deny拒绝,hangup挂机 ，permit同意
  */
 function applySdp(username, type) {
     stompClient.send(sendUrl + username, {}, JSON.stringify({'sdpMessage': {'type': type}}))
 }
 
-/**
- * 处理sdpMsg消息
- */
-function dealSdp(sdpMsg) {
-    debugger;
-    if (sdpMsg.type == 'offer') {
 
-    } else if (sdpMsg.type == 'answer') {
-    } else if (sdpMsg.type == 'deny') {
-    } else if (sdpMsg.type == 'hangup') {
-    }
-}
 
 /**stomp 操作end**/
 
