@@ -8,9 +8,7 @@ import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.ChannelInterceptorAdapter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -45,11 +43,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 log.info("---------所有websocket请求会被拦截-----------");
                 //添加只能订阅自己消息的验证
-                if("SUBSCRIBE".equals(((SimpMessageType)message.getHeaders().get("simpMessageType")).name())){
+                if ("SUBSCRIBE".equals(((SimpMessageType) message.getHeaders().get("simpMessageType")).name())) {
                     //会话里面的用户名
-                    String sessionUserName=((User)((UsernamePasswordAuthenticationToken)message.getHeaders().get("simpUser")).getPrincipal()).getUsername();
-                    log.info("获取会话里面的用户名：{}",sessionUserName);
-                    if(!("/topic/chat/"+sessionUserName).equals(message.getHeaders().get("simpDestination"))){
+                    String sessionUserName = ((User) ((UsernamePasswordAuthenticationToken) message.getHeaders().get("simpUser")).getPrincipal()).getUsername();
+                    log.info("获取会话里面的用户名：{}", sessionUserName);
+                    if (!("/topic/chat/" + sessionUserName).equals(message.getHeaders().get("simpDestination"))) {
                         return null;
                     }
                 }
