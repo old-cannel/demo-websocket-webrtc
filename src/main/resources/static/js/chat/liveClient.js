@@ -230,7 +230,7 @@ function setIceCandidate(candidate,peerConnection) {
 
 }
 function configIce() {
-    var stunuri = true,
+    var stunuri = false,
         turnuri = false,
         config = new Array();
 
