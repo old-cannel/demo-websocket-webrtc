@@ -10,11 +10,13 @@ import java.io.Serializable;
  * @Description: websocket 消息
  */
 @Data
-public class WebSocketMessage implements Serializable {
+public class WebrtcMessage implements Serializable {
 //  普通消息
     private String message;
 //    发消息人用户名
     private String fromUserName;
+    //接收消息用户名
+    private String username;
 
 //    是否是sdp消息
     private boolean sdpMsg;

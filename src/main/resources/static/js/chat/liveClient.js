@@ -1,21 +1,16 @@
 /*live chat client samples*/
-//stomp 服务地址
+//websocket 服务地址
 const
     //socker 地址
-    websocketUrl = 'my-websocket',
+    websocketUrl = 'ws://localhost:2019/chat/websocket',
     //我的朋友
     myFriendsUrl = '/myFriends',
     //我的用户名
-    myNameUrl = '/myName',
-    //发送消息
-    sendUrl = '/app/chat/',
-    // 订阅消息
-    topicUrl = '/topic/chat/';
+    myNameUrl = '/myName';
+
 let
     //客户端
-    stompClient = null,
-    //我的用户名（系统唯一）
-    myName = null,
+    websocket = null,
     //发送用户名（系统唯一）
     toUserName = null;
 
@@ -39,8 +34,10 @@ $(function () {
      remoteVideo = document.getElementById("remoteVideo");
 
     //好友、用户信息、订阅自己的消息通道
-    $.get(myFriendsUrl, myFriendsCallBack);
-    $.get(myNameUrl, myNameCallBack);
+    myFriendsCallBack(null);
+    myNameCallBack(null);
+   /* $.get(myFriendsUrl, myFriendsCallBack);
+    $.get(myNameUrl, myNameCallBack);*/
 });
 /**
  * 本地视频加载
@@ -146,7 +143,7 @@ function receiveAnswer(answerDescption) {
     peerConnection.setRemoteDescription(answerDescption);
     peerConnection.setRemoteDescription(answerDescption);
     //没有完成链接就重新发起链接
-    if(peerConnection.iceConnectionState!='connected'){
+    if(peerConnection.iceConnectionState!='connected' && peerConnection.iceConnectionState!='completed'){
         offer();
     }
 }
@@ -295,10 +292,11 @@ function dealSdp(sdpMsg) {
  * @param data
  */
 function myFriendsCallBack(data) {
-    $.each(data.result, function (i, val) {
+   /* $.each(data.result, function (i, val) {
         $("#myFriends").append('<li><span>' + val + '</span> <button type="button" class="btn btn-info" onclick="call(this)" style="margin: 5px 0px;">呼叫</button></li>');
-    });
-
+    });*/
+    $("#myFriends").append('<li><span>111</span> <button type="button" class="btn btn-info" onclick="call(this)" style="margin: 5px 0px;">呼叫</button></li>');
+    $("#myFriends").append('<li><span>222</span> <button type="button" class="btn btn-info" onclick="call(this)" style="margin: 5px 0px;">呼叫</button></li>');
 }
 
 /**
@@ -306,40 +304,42 @@ function myFriendsCallBack(data) {
  * @param data
  */
 function myNameCallBack(data) {
-    myName = data.result;
+    // myName = data.result;
     subscribeSelf();
 }
-
 /**
  * 订阅自己通道
  */
 function subscribeSelf() {
-    var socket = new SockJS(websocketUrl);
-    stompClient = Stomp.over(socket);
-    stompClient.connect({}, function (frame) {
-        console.log('Connected: ' + frame);
-        //订阅自己的消息
-        stompClient.subscribe(topicUrl + myName, function (message) {
-            //处理消息
-            console.info(message);
-            let body = JSON.parse(message.body);
-            if (body.code == 10000) {
-                let result = body.result;
-                if (result.sdpMsg) {
-                    //这个里面处理视频聊天
-                    toUserName = result.fromUserName;
-                    dealSdp(result.sdpMessage);
-                } else {
-                    //    这个里面是普通的聊天
-                    alert("发送人：" + result.fromUserName + ",内容:" + result.message);
-                }
-            } else {
-                alert("未知的消息或请求处理失败");
-            }
+    websocket = new WebSocket(websocketUrl); //创建WebSocket对象
+    console.info(websocket.readyState);//查看websocket当前状态
+    websocket.onopen = function (evt) {
+//已经建立连接
+        console.info('连接成功');
+    };
+    websocket.onclose = function (evt) {
+//已经关闭连接
+        console.info('关闭连接');
+    };
+    websocket.onmessage = function (evt) {
+//收到服务器消息，使用evt.data提取
+        console.info(JSON.stringify(evt.data));
 
+        let result = JSON.parse(evt.data);
+        if (result.sdpMsg) {
+            //这个里面处理视频聊天
+            toUserName = result.fromUserName;
+            dealSdp(result.sdpMessage);
+        } else {
+            //    这个里面是普通的聊天
+            alert("发送id：" + result.fromUserName + ",内容:" + result.message);
+        }
+    };
+    websocket.onerror = function (evt) {
+//产生异常
+        console.info('连接异常，请重试！');
+    };
 
-        });
-    });
 }
 
 /**
@@ -348,7 +348,7 @@ function subscribeSelf() {
  * @param msg
  */
 function sendMsg(username, msg) {
-    stompClient.send(sendUrl + username, {}, JSON.stringify({'message': msg}))
+    websocket.send(JSON.stringify({'username':username,'message': msg}))
 }
 
 /**
@@ -357,7 +357,7 @@ function sendMsg(username, msg) {
  * @param sdpMsg
  */
 function sendSdpMsg(username, sdpMsg) {
-    stompClient.send(sendUrl + username, {}, JSON.stringify({'sdpMessage': sdpMsg}));
+    websocket.send(JSON.stringify({'username':username,'sdpMsg':true,'sdpMessage': sdpMsg}))
 }
 
 
@@ -367,7 +367,7 @@ function sendSdpMsg(username, sdpMsg) {
  * @param type offer请求，answer同意，deny拒绝,hangup挂机 ，permit同意
  */
 function applySdp(username, type) {
-    stompClient.send(sendUrl + username, {}, JSON.stringify({'sdpMessage': {'type': type}}))
+    websocket.send(JSON.stringify({'username':username,'sdpMsg':true,'sdpMessage': {'type': type}}))
 }
 
 

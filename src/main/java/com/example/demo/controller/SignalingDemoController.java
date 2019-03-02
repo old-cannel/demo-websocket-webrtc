@@ -7,15 +7,20 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * @Auther: liuqi
  * @Date: 2019/1/26 09:19
- * @Description: 信令服务
+ * @Description: 信令服务 基于stomp
  */
 @Controller
 public class SignalingDemoController {
+
+    @RequestMapping("/chat")
+    public String chat() {
+        return "live-chat";
+    }
 
     /**
      * 通过房间号建立每个浏览器与服务器的数据通道
@@ -27,7 +32,7 @@ public class SignalingDemoController {
     @MessageMapping("/connect/{room}")
     @SendTo("/topic/connect/{room}")
     public SignalingMessage connect(@DestinationVariable("room") String room, SignalingMessage signalingMessage, StompHeaderAccessor stompHeaderAccessor) {
-        signalingMessage.setMessage(stompHeaderAccessor.getSessionId()+"说："+signalingMessage.getMessage());
+        signalingMessage.setMessage(stompHeaderAccessor.getSessionId() + "说：" + signalingMessage.getMessage());
         signalingMessage.setRoom(room);
         signalingMessage.setSessionId(stompHeaderAccessor.getSessionId());
         return signalingMessage;
@@ -35,12 +40,11 @@ public class SignalingDemoController {
 
     @MessageMapping("/sessionId")
     @SendToUser("/topic/sessionId")
-    public String getSessionId(StompHeaderAccessor stompHeaderAccessor){
+    public String getSessionId(StompHeaderAccessor stompHeaderAccessor) {
         return stompHeaderAccessor.getSessionId();
     }
 
     /**
-     *
      * 开始创建p2p
      *
      * @param room
@@ -49,7 +53,7 @@ public class SignalingDemoController {
     @MessageMapping("/rtc/{room}")
     @SendTo("/topic/rtc/{room}")
     public SignalingMessage rtc(@DestinationVariable("room") String room) {
-        SignalingMessage signalingMessage=new SignalingMessage();
+        SignalingMessage signalingMessage = new SignalingMessage();
         signalingMessage.setMessage("创建p2p");
         return signalingMessage;
     }
