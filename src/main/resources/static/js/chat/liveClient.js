@@ -2,7 +2,7 @@
 //websocket 服务地址
 const
     //socker 地址
-    websocketUrl = 'ws://localhost:2019/chat/websocket',
+    websocketUrl = 'wss://localhost:2019/chat/websocket',
     //我的朋友
     myFriendsUrl = '/myFriends',
     //我的用户名

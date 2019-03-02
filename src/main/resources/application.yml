@@ -28,7 +28,7 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 server:
   ssl:
-    enabled: false
+    enabled: true
     key-store: keystore.p12
     key-store-password: 123456
     key-store-type: PKCS12
