@@ -28,9 +28,10 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 server:
   ssl:
-    enabled: true
+    enabled: false
     key-store: keystore.p12
     key-store-password: 123456
     key-store-type: PKCS12
     key-alias: tomcat
   port: 2019
+  address: 0.0.0.0

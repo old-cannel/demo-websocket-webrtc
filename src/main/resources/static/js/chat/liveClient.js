@@ -2,7 +2,7 @@
 //websocket 服务地址
 const
     //socker 地址
-    websocketUrl = 'wss://localhost:2019/chat/websocket',
+    websocketUrl = 'ws://localhost:2019/chat/websocket',
     //我的朋友
     myFriendsUrl = '/myFriends',
     //我的用户名
@@ -210,7 +210,9 @@ function gotRemoteStream(event){
 }
 function gotIceCandidate(event){
     if (event.candidate) {
-        sendSdpMsg(toUserName,event.candidate);
+        let msg=event.candidate;
+        msg.type='candidate';
+        sendSdpMsg(toUserName,msg);
     }
 }
 
@@ -281,7 +283,8 @@ function dealSdp(sdpMsg) {
     else if (sdpMsg.type == 'hangup') {
         hangup();
     } else if (sdpMsg.type == 'candidate') {
-        setIceCandidate(sdpMsg,remotePeerConnection);
+
+        setIceCandidate(sdpMsg,peerConnection);
     }
 
 }
